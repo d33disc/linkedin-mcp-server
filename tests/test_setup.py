@@ -141,3 +141,156 @@ async def test_interactive_login_passes_chrome_path_to_browser_manager(
     await interactive_login(tmp_path / "profile")
 
     assert captured_kwargs.get("executable_path") == "/custom/chrome"
+
+
+@pytest.mark.asyncio
+async def test_interactive_login_forwards_all_browser_params(monkeypatch, tmp_path):
+    """All browser config params must reach BrowserManager during --login."""
+    browser = _make_browser(export_cookies=True)
+    captured_kwargs: dict = {}
+
+    def fake_browser_manager(**kwargs):
+        captured_kwargs.update(kwargs)
+        return _BrowserContextManager(browser)
+
+    config = AppConfig()
+    config.browser.chrome_path = "/custom/chrome"
+    config.browser.slow_mo = 250
+    config.browser.user_agent = "CustomAgent/1.0"
+    config.browser.viewport_width = 1920
+    config.browser.viewport_height = 1080
+
+    monkeypatch.setattr("linkedin_mcp_server.setup.get_config", lambda: config)
+    monkeypatch.setattr(
+        "linkedin_mcp_server.setup.BrowserManager", fake_browser_manager
+    )
+    monkeypatch.setattr("linkedin_mcp_server.setup.warm_up_browser", AsyncMock())
+    monkeypatch.setattr(
+        "linkedin_mcp_server.setup.resolve_remember_me_prompt",
+        AsyncMock(return_value=False),
+    )
+    monkeypatch.setattr("linkedin_mcp_server.setup.wait_for_manual_login", AsyncMock())
+    monkeypatch.setattr(
+        "linkedin_mcp_server.setup.write_source_state",
+        MagicMock(return_value=SimpleNamespace(login_generation="gen-1")),
+    )
+    monkeypatch.setattr("linkedin_mcp_server.setup.asyncio.sleep", AsyncMock())
+
+    profile = tmp_path / "profile"
+    await interactive_login(profile)
+
+    assert captured_kwargs["user_data_dir"] == profile
+    assert captured_kwargs["headless"] is False
+    assert captured_kwargs["slow_mo"] == 250
+    assert captured_kwargs["user_agent"] == "CustomAgent/1.0"
+    assert captured_kwargs["viewport"] == {"width": 1920, "height": 1080}
+    assert captured_kwargs["executable_path"] == "/custom/chrome"
+
+
+@pytest.mark.asyncio
+async def test_interactive_login_passes_slow_mo_to_browser_manager(
+    monkeypatch, tmp_path
+):
+    """When config.browser.slow_mo is set, it must reach BrowserManager."""
+    browser = _make_browser(export_cookies=True)
+    captured_kwargs: dict = {}
+
+    def fake_browser_manager(**kwargs):
+        captured_kwargs.update(kwargs)
+        return _BrowserContextManager(browser)
+
+    config = AppConfig()
+    config.browser.slow_mo = 250
+
+    monkeypatch.setattr("linkedin_mcp_server.setup.get_config", lambda: config)
+    monkeypatch.setattr(
+        "linkedin_mcp_server.setup.BrowserManager", fake_browser_manager
+    )
+    monkeypatch.setattr("linkedin_mcp_server.setup.warm_up_browser", AsyncMock())
+    monkeypatch.setattr(
+        "linkedin_mcp_server.setup.resolve_remember_me_prompt",
+        AsyncMock(return_value=False),
+    )
+    monkeypatch.setattr("linkedin_mcp_server.setup.wait_for_manual_login", AsyncMock())
+    monkeypatch.setattr(
+        "linkedin_mcp_server.setup.write_source_state",
+        MagicMock(return_value=SimpleNamespace(login_generation="gen-1")),
+    )
+    monkeypatch.setattr("linkedin_mcp_server.setup.asyncio.sleep", AsyncMock())
+
+    await interactive_login(tmp_path / "profile")
+
+    assert captured_kwargs.get("slow_mo") == 250
+
+
+@pytest.mark.asyncio
+async def test_interactive_login_passes_user_agent_to_browser_manager(
+    monkeypatch, tmp_path
+):
+    """When config.browser.user_agent is set, it must reach BrowserManager."""
+    browser = _make_browser(export_cookies=True)
+    captured_kwargs: dict = {}
+
+    def fake_browser_manager(**kwargs):
+        captured_kwargs.update(kwargs)
+        return _BrowserContextManager(browser)
+
+    config = AppConfig()
+    config.browser.user_agent = "CustomAgent/1.0"
+
+    monkeypatch.setattr("linkedin_mcp_server.setup.get_config", lambda: config)
+    monkeypatch.setattr(
+        "linkedin_mcp_server.setup.BrowserManager", fake_browser_manager
+    )
+    monkeypatch.setattr("linkedin_mcp_server.setup.warm_up_browser", AsyncMock())
+    monkeypatch.setattr(
+        "linkedin_mcp_server.setup.resolve_remember_me_prompt",
+        AsyncMock(return_value=False),
+    )
+    monkeypatch.setattr("linkedin_mcp_server.setup.wait_for_manual_login", AsyncMock())
+    monkeypatch.setattr(
+        "linkedin_mcp_server.setup.write_source_state",
+        MagicMock(return_value=SimpleNamespace(login_generation="gen-1")),
+    )
+    monkeypatch.setattr("linkedin_mcp_server.setup.asyncio.sleep", AsyncMock())
+
+    await interactive_login(tmp_path / "profile")
+
+    assert captured_kwargs.get("user_agent") == "CustomAgent/1.0"
+
+
+@pytest.mark.asyncio
+async def test_interactive_login_passes_viewport_to_browser_manager(
+    monkeypatch, tmp_path
+):
+    """When config.browser.viewport is set, it must reach BrowserManager."""
+    browser = _make_browser(export_cookies=True)
+    captured_kwargs: dict = {}
+
+    def fake_browser_manager(**kwargs):
+        captured_kwargs.update(kwargs)
+        return _BrowserContextManager(browser)
+
+    config = AppConfig()
+    config.browser.viewport_width = 1920
+    config.browser.viewport_height = 1080
+
+    monkeypatch.setattr("linkedin_mcp_server.setup.get_config", lambda: config)
+    monkeypatch.setattr(
+        "linkedin_mcp_server.setup.BrowserManager", fake_browser_manager
+    )
+    monkeypatch.setattr("linkedin_mcp_server.setup.warm_up_browser", AsyncMock())
+    monkeypatch.setattr(
+        "linkedin_mcp_server.setup.resolve_remember_me_prompt",
+        AsyncMock(return_value=False),
+    )
+    monkeypatch.setattr("linkedin_mcp_server.setup.wait_for_manual_login", AsyncMock())
+    monkeypatch.setattr(
+        "linkedin_mcp_server.setup.write_source_state",
+        MagicMock(return_value=SimpleNamespace(login_generation="gen-1")),
+    )
+    monkeypatch.setattr("linkedin_mcp_server.setup.asyncio.sleep", AsyncMock())
+
+    await interactive_login(tmp_path / "profile")
+
+    assert captured_kwargs.get("viewport") == {"width": 1920, "height": 1080}
