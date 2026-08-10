@@ -39,7 +39,7 @@ jobs:
         with:
           enable-cache: true
 
-      - run: uv python install 3.14
+      - run: uv python install 3.13
 
       - run: uv sync --group dev
 

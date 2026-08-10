@@ -34,6 +34,11 @@ from linkedin_mcp_server.setup import run_profile_creation
 logger = logging.getLogger(__name__)
 
 
+def _log_profile_dir() -> None:
+    """Log the effective persistent profile directory."""
+    logger.info("Using profile directory: %s", get_profile_dir())
+
+
 def _configure_and_log(config, mode: str) -> str:
     """Common setup for CLI subcommands. Returns version string."""
     configure_logging(
@@ -42,6 +47,7 @@ def _configure_and_log(config, mode: str) -> str:
     )
     version = _get_version()
     logger.info("LinkedIn MCP Server v%s - %s", version, mode)
+    _log_profile_dir()
     return version
 
 
@@ -166,6 +172,7 @@ def main() -> None:
             "Run manually: uv run python -m patchright install chromium"
         )
     set_headless(config.browser.headless)
+    _log_profile_dir()
 
     if config.server.logout:
         clear_profile_and_exit()

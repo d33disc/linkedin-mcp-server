@@ -44,6 +44,27 @@ def test_main_non_interactive_stdio_has_no_human_stdout(
     assert captured.out == ""
 
 
+def test_main_logs_effective_profile_dir(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path,
+) -> None:
+    config = _make_config(is_interactive=False, transport="stdio", transport_explicitly_set=False)
+    _patch_main_dependencies(monkeypatch, config)
+    profile_dir = tmp_path / "profile"
+    logger = MagicMock()
+    mcp = MagicMock()
+    monkeypatch.setattr("linkedin_mcp_server.cli_main.logger", logger)
+    monkeypatch.setattr("linkedin_mcp_server.cli_main.get_profile_dir", lambda: profile_dir)
+    monkeypatch.setattr("linkedin_mcp_server.cli_main.create_mcp_server", lambda: mcp)
+
+    cli_main.main()
+
+    assert any(
+        call.args == ("Using profile directory: %s", profile_dir)
+        for call in logger.info.call_args_list
+    )
+
+
 def test_main_interactive_prompts_when_transport_not_explicit(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

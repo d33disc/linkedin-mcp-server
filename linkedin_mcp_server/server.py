@@ -10,7 +10,7 @@ import mcp.types as mt
 from fastmcp import FastMCP
 from fastmcp.server.lifespan import lifespan
 from fastmcp.server.middleware import CallNext, Middleware, MiddlewareContext
-from fastmcp.tools.tool import ToolResult
+from fastmcp.tools.base import ToolResult
 
 from linkedin_mcp_server.bootstrap import (
     initialize_bootstrap,

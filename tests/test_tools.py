@@ -389,6 +389,7 @@ class TestToolTimeouts:
 
         tool = await mcp.get_tool("get_person_profile")
         assert tool is not None
+        assert tool.timeout is not None
         assert tool.timeout == PERSON_PROFILE_TOOL_TIMEOUT_SECONDS
         assert tool.timeout > TOOL_TIMEOUT_SECONDS
 

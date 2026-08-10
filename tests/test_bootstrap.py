@@ -1,4 +1,5 @@
 import os
+import re
 import subprocess
 
 import pytest
@@ -123,7 +124,9 @@ class TestBootstrap:
         monkeypatch.setenv("PLAYWRIGHT_BROWSERS_PATH", str(browser_dir))
         initialize_bootstrap()
 
-        with pytest.raises(AuthenticationError, match="No valid LinkedIn session"):
+        profile_dir = tmp_path / "profile"
+        expected = re.escape(f"No valid LinkedIn session found at {profile_dir}")
+        with pytest.raises(AuthenticationError, match=expected):
             await ensure_tool_ready_or_raise("get_person_profile")
 
     def test_reset_bootstrap_clears_state(self):

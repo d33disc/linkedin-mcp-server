@@ -7,10 +7,10 @@ for AI assistants. This package enables secure LinkedIn profile, company, and jo
 data scraping through a standardized MCP interface.
 
 Key Features:
-- Secure LinkedIn authentication via session files
+- Secure LinkedIn authentication via persistent browser profiles
 - LinkedIn profile, company, and job data scraping
 - MCP-compliant server implementation using FastMCP
-- Playwright browser automation with session persistence
+- Patchright browser automation with persistent session state
 - Layered configuration system with secure credential storage
 - Docker containerization for easy deployment
 - Claude Desktop MCP Bundle (MCPB, formerly DXT) support

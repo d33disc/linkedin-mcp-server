@@ -118,7 +118,8 @@ async def get_or_create_browser(headless: bool | None = None) -> BrowserManager:
     source_state = load_source_state(profile_dir)
     if not source_state or not profile_exists(profile_dir) or not cookie_path.exists():
         raise AuthenticationError(
-            "No source authentication found. Run with --login to create a profile."
+            f"No source authentication found at {profile_dir}. "
+            "Run with --login to create a profile."
         )
     browser = _make_browser(profile_dir, launch_options=launch_options, viewport=viewport)
     try:
@@ -126,7 +127,8 @@ async def get_or_create_browser(headless: bool | None = None) -> BrowserManager:
         await browser.import_cookies(cookie_path)
         if not await _feed_auth_succeeds(browser):
             raise AuthenticationError(
-                "Stored profile is invalid. Run with --login to refresh the session."
+                f"Stored profile is invalid at {profile_dir}. "
+                "Run with --login to refresh the session."
             )
         browser.is_authenticated = True
     except Exception:
@@ -213,7 +215,7 @@ async def recover_session() -> bool:
 
 async def ensure_authenticated() -> None:
     if not await validate_session():
-        raise AuthenticationError("Session expired or invalid.")
+        raise AuthenticationError(f"Session expired or invalid for profile {get_profile_dir()}.")
 
 
 async def check_rate_limit() -> None:

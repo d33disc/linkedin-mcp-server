@@ -1,18 +1,37 @@
+from types import SimpleNamespace
+
 import pytest
 from linkedin_mcp_server.config.loaders import (
     AppConfig,
     BrowserConfig,
     ConfigurationError,
     ServerConfig,
+    resolve_user_path,
 )
 
 
 class TestBrowserConfig:
-    def test_defaults(self):
+    def test_defaults(self, monkeypatch):
+        monkeypatch.setenv("HOME", "/tmp/cc-home")
+        monkeypatch.setattr(
+            "linkedin_mcp_server.config.loaders.pwd.getpwuid",
+            lambda _uid: SimpleNamespace(pw_dir="/Users/real"),
+        )
         config = BrowserConfig()
         assert config.headless is True
         assert config.default_timeout == 5000
-        assert config.user_data_dir == "~/.linkedin-mcp/profile"
+        assert config.user_data_dir == "/Users/real/.linkedin-mcp/profile"
+
+    def test_resolve_user_path_uses_system_home_not_home_env(self, monkeypatch):
+        monkeypatch.setenv("HOME", "/tmp/cc-home")
+        monkeypatch.setattr(
+            "linkedin_mcp_server.config.loaders.pwd.getpwuid",
+            lambda _uid: SimpleNamespace(pw_dir="/Users/real"),
+        )
+
+        assert resolve_user_path("~/.linkedin-mcp/profile").as_posix() == (
+            "/Users/real/.linkedin-mcp/profile"
+        )
 
     def test_validate_passes(self):
         BrowserConfig().validate()  # No error

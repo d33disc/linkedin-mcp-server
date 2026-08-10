@@ -14,11 +14,13 @@ from patchright.async_api import (
     async_playwright,
 )
 
+from linkedin_mcp_server.config.loaders import default_user_data_dir, resolve_user_path
+
 from .exceptions import NetworkError
 
 logger = logging.getLogger(__name__)
 
-_DEFAULT_USER_DATA_DIR = Path.home() / ".linkedin-mcp" / "profile"
+_DEFAULT_USER_DATA_DIR = Path(default_user_data_dir())
 
 
 class BrowserManager:
@@ -42,7 +44,7 @@ class BrowserManager:
         cdp_endpoint: str | None = None,
         **launch_options: Any,
     ):
-        self.user_data_dir = str(Path(user_data_dir).expanduser())
+        self.user_data_dir = str(resolve_user_path(user_data_dir))
         self.headless = headless
         self.slow_mo = slow_mo
         self.viewport = viewport or {"width": 1280, "height": 720}
