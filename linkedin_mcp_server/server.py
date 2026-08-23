@@ -8,6 +8,7 @@ from typing import Any
 
 import mcp.types as mt
 from fastmcp import FastMCP
+from fastmcp.exceptions import ToolError
 from fastmcp.server.lifespan import lifespan
 from fastmcp.server.middleware import CallNext, Middleware, MiddlewareContext
 from fastmcp.tools.tool import ToolResult
@@ -26,6 +27,13 @@ from linkedin_mcp_server.tools.page import register_page_tools
 from linkedin_mcp_server.tools.person import register_person_tools
 
 logger = logging.getLogger(__name__)
+
+_BROWSER_CONTEXT_CLOSED = "Target page, context or browser has been closed"
+
+
+def _is_browser_context_closed(exc: Exception) -> bool:
+    """Return whether Patchright reports a dead browser context."""
+    return type(exc).__name__ == "TargetClosedError" or _BROWSER_CONTEXT_CLOSED in str(exc)
 
 
 class SequentialToolExecutionMiddleware(Middleware):
@@ -53,6 +61,24 @@ class SequentialToolExecutionMiddleware(Middleware):
             hold_started = time.perf_counter()
             try:
                 return await call_next(context)
+            except Exception as exc:
+                if not _is_browser_context_closed(exc):
+                    raise
+                logger.warning(
+                    "Browser context closed during tool '%s'; resetting for retry",
+                    tool_name,
+                )
+                try:
+                    await close_browser()
+                except Exception:
+                    logger.warning(
+                        "Browser cleanup failed during crash recovery",
+                        exc_info=True,
+                    )
+                raise ToolError(
+                    "The browser context crashed mid-operation. "
+                    "The browser has been reset; please retry this tool."
+                ) from exc
             finally:
                 hold_seconds = time.perf_counter() - hold_started
                 logger.debug(

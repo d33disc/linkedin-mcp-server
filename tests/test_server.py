@@ -1,6 +1,9 @@
 import asyncio
+from unittest.mock import AsyncMock, MagicMock
 
+import pytest
 from fastmcp import FastMCP
+from fastmcp.exceptions import ToolError
 from linkedin_mcp_server.server import (
     SequentialToolExecutionMiddleware,
     create_mcp_server,
@@ -8,6 +11,26 @@ from linkedin_mcp_server.server import (
 
 
 class TestSequentialToolExecutionMiddleware:
+    async def test_resets_browser_after_context_crash(self, monkeypatch):
+        close_browser = AsyncMock()
+        monkeypatch.setattr(
+            "linkedin_mcp_server.server.close_browser",
+            close_browser,
+        )
+        context = MagicMock()
+        context.message.name = "search_people"
+
+        call_next = AsyncMock(
+            side_effect=RuntimeError(
+                "Page.evaluate: Target page, context or browser has been closed"
+            )
+        )
+
+        with pytest.raises(ToolError, match="please retry"):
+            await SequentialToolExecutionMiddleware().on_call_tool(context, call_next)
+
+        close_browser.assert_awaited_once()
+
     async def test_create_mcp_server_registers_sequential_tool_middleware(self):
         mcp = create_mcp_server()
 
