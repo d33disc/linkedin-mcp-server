@@ -36,8 +36,8 @@ def get_system_home_dir() -> Path:
         return Path.home()
     try:
         return Path(pwd.getpwuid(os.getuid()).pw_dir)
-    except Exception:
-        return Path.home()
+    except (KeyError, OSError) as error:
+        raise ConfigurationError("Could not determine the account home directory") from error
 
 
 def resolve_user_path(value: str | Path) -> Path:

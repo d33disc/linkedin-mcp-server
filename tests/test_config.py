@@ -6,6 +6,7 @@ from linkedin_mcp_server.config.loaders import (
     BrowserConfig,
     ConfigurationError,
     ServerConfig,
+    get_system_home_dir,
     resolve_user_path,
 )
 
@@ -32,6 +33,20 @@ class TestBrowserConfig:
         assert resolve_user_path("~/.linkedin-mcp/profile").as_posix() == (
             "/Users/real/.linkedin-mcp/profile"
         )
+
+    def test_system_home_lookup_fails_closed(self, monkeypatch):
+        monkeypatch.setenv("HOME", "/tmp/untrusted-home")
+
+        def account_not_found(_uid):
+            raise KeyError
+
+        monkeypatch.setattr(
+            "linkedin_mcp_server.config.loaders.pwd.getpwuid",
+            account_not_found,
+        )
+
+        with pytest.raises(ConfigurationError, match="account home directory"):
+            get_system_home_dir()
 
     def test_validate_passes(self):
         BrowserConfig().validate()  # No error
