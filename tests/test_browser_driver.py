@@ -1,6 +1,7 @@
 """Tests for linkedin_mcp_server.drivers.browser auth startup."""
 
 import json
+import re
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -73,10 +74,11 @@ def _write_source_state(tmp_path, *, runtime_id: str, login_generation: str = "g
 
 
 @pytest.mark.asyncio
-async def test_get_or_create_browser_requires_source_state():
+async def test_get_or_create_browser_requires_source_state(tmp_path):
     from linkedin_mcp_server.core import AuthenticationError
 
-    with pytest.raises(AuthenticationError):
+    expected = re.escape(f"No source authentication found at {tmp_path / 'profile'}")
+    with pytest.raises(AuthenticationError, match=expected):
         await get_or_create_browser()
 
 

@@ -111,14 +111,16 @@ async def ensure_tool_ready_or_raise(_tool_name: str, _ctx: object | None = None
         and source_state_path(profile_dir).exists()
     ):
         raise AuthenticationError(
-            "No valid LinkedIn session found. Run with --login to create a browser profile."
+            f"No valid LinkedIn session found at {profile_dir}. "
+            "Run with --login to create a browser profile."
         )
 
     try:
         get_authentication_source()
     except Exception as exc:
         raise AuthenticationError(
-            "LinkedIn session metadata is incomplete. Run with --login to re-authenticate."
+            f"LinkedIn session metadata is incomplete for {profile_dir}. "
+            "Run with --login to re-authenticate."
         ) from exc
 
 

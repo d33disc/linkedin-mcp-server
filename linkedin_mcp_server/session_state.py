@@ -7,12 +7,15 @@ import logging
 import platform
 import shutil
 from dataclasses import asdict, dataclass, fields
-from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from uuid import uuid4
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 from linkedin_mcp_server.common_utils import utcnow_iso
 from linkedin_mcp_server.config import get_config
+from linkedin_mcp_server.config.loaders import resolve_user_path
 
 logger = logging.getLogger(__name__)
 _SOURCE_STATE_FILE = "source-state.json"
@@ -32,11 +35,11 @@ _SOURCE_STATE_FIELDS = frozenset(field.name for field in fields(SourceState))
 
 
 def get_source_profile_dir() -> Path:
-    return Path(get_config().browser.user_data_dir).expanduser()
+    return resolve_user_path(get_config().browser.user_data_dir)
 
 
 def auth_root_dir(source_profile_dir: Path | None = None) -> Path:
-    return (source_profile_dir or get_source_profile_dir()).expanduser().resolve().parent
+    return (source_profile_dir or get_source_profile_dir()).resolve().parent
 
 
 def portable_cookie_path(source_profile_dir: Path | None = None) -> Path:
@@ -48,7 +51,7 @@ def source_state_path(source_profile_dir: Path | None = None) -> Path:
 
 
 def profile_exists(profile_dir: Path | None = None) -> bool:
-    profile_dir = (profile_dir or get_source_profile_dir()).expanduser()
+    profile_dir = profile_dir or get_source_profile_dir()
     return profile_dir.is_dir() and any(profile_dir.iterdir())
 
 
@@ -76,7 +79,7 @@ def load_source_state(source_profile_dir: Path | None = None) -> SourceState | N
 
 
 def write_source_state(source_profile_dir: Path | None = None) -> SourceState:
-    profile_dir = (source_profile_dir or get_source_profile_dir()).expanduser().resolve()
+    profile_dir = (source_profile_dir or get_source_profile_dir()).resolve()
     state = SourceState(
         version=1,
         source_runtime_id=get_runtime_id(),

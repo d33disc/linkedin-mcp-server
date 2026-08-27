@@ -74,10 +74,10 @@ What has Anthropic been posting about recently? https://www.linkedin.com/company
 }
 ```
 
-The server starts quickly, prepares the shared Patchright Chromium browser cache in the background under `~/.linkedin-mcp/patchright-browsers`, and opens a LinkedIn login browser window on the first tool call that needs authentication.
+The server uses the shared Patchright Chromium cache under `~/.linkedin-mcp/patchright-browsers`. Install Chromium there before first use, then the first auth-requiring tool call can open a LinkedIn login browser window.
 
 > [!NOTE]
-> Early tool calls may return a setup/authentication-in-progress error until browser setup or login finishes. If you prefer to create a session explicitly, run `uvx linkedin-scraper-mcp --login`.
+> If the shared Chromium cache is missing, install it with Patchright before calling tools. If you prefer to create a session explicitly after that, run `uvx linkedin-scraper-mcp --login`.
 
 ### uvx Setup Help
 
@@ -181,7 +181,7 @@ parallel. Use `--log-level DEBUG` to see scraper lock wait/acquire/release logs.
 2. Double-click to install it into Claude Desktop
 3. Call any LinkedIn tool
 
-On startup, the MCP Bundle starts preparing the shared Patchright Chromium browser cache in the background. If you call a tool too early, Claude will surface a setup-in-progress error. On the first tool call that needs authentication, the server opens a LinkedIn login browser window and asks you to retry after sign-in.
+The MCP Bundle uses the shared Patchright Chromium cache under `~/.linkedin-mcp/patchright-browsers`. If Chromium is missing, install it with Patchright before calling tools. On the first tool call that needs authentication, the server opens a LinkedIn login browser window and asks you to retry after sign-in.
 
 ### MCP Bundle Setup Help
 
@@ -354,11 +354,14 @@ uv sync --group dev
 # 4. Install pre-commit hooks
 uv run pre-commit install
 
-# 5. Start the server
+# 5. Install Patchright Chromium
+uv run python -m patchright install chromium
+
+# 6. Start the server
 uv run -m linkedin_mcp_server
 ```
 
-The local server uses the same managed-runtime flow as MCPB and `uvx`: it prepares the Patchright Chromium browser cache in the background and opens LinkedIn login on the first auth-requiring tool call. You can still run `uv run -m linkedin_mcp_server --login` when you want to create or refresh the session explicitly.
+The local server expects the shared Patchright Chromium cache to already exist under `~/.linkedin-mcp/patchright-browsers`. Once Chromium is installed, the first auth-requiring tool call can open a LinkedIn login browser window. You can also run `uv run -m linkedin_mcp_server --login` when you want to create or refresh the session explicitly.
 
 `--login` saves the profile and exits. If you need to authenticate first and keep the MCP process running for a client that expects a live server after login, use `--login-serve`.
 

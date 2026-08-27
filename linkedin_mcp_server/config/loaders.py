@@ -6,7 +6,15 @@ import os
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
+from types import ModuleType
 from typing import Literal, cast
+
+try:
+    import pwd as _pwd
+except ImportError:  # pragma: no cover - Windows
+    pwd: ModuleType | None = None
+else:
+    pwd = _pwd
 
 from dotenv import load_dotenv
 
@@ -22,6 +30,31 @@ class ConfigurationError(Exception):
     """Raised when configuration validation fails."""
 
 
+def get_system_home_dir() -> Path:
+    """Return the account home directory without trusting a HOME override."""
+    if pwd is None:
+        return Path.home()
+    try:
+        return Path(pwd.getpwuid(os.getuid()).pw_dir)
+    except (KeyError, OSError) as error:
+        raise ConfigurationError("Could not determine the account home directory") from error
+
+
+def resolve_user_path(value: str | Path) -> Path:
+    """Resolve ``~`` against the account home directory, not the process HOME."""
+    raw = str(value)
+    if raw == "~":
+        return get_system_home_dir()
+    if raw.startswith(("~/", "~\\")):
+        return get_system_home_dir() / raw[2:]
+    return Path(raw).expanduser()
+
+
+def default_user_data_dir() -> str:
+    """Return the default persistent profile path."""
+    return str(get_system_home_dir() / ".linkedin-mcp" / "profile")
+
+
 @dataclass
 class BrowserConfig:
     """Browser settings."""
@@ -33,7 +66,7 @@ class BrowserConfig:
     viewport_height: int = 720
     default_timeout: int = 5000
     chrome_path: str | None = None
-    user_data_dir: str = "~/.linkedin-mcp/profile"
+    user_data_dir: str = field(default_factory=default_user_data_dir)
 
     def validate(self) -> None:
         if self.slow_mo < 0:
